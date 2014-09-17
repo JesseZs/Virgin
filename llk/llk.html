@@ -4,25 +4,89 @@
     <title>Hello World</title>
 
 	<meta charset="utf-8">
-	<link rel="dns-prefetch" hreplanetf="//github.com">
-	<link rel="shortcut icon" href="http://www.bootcss.com/p/simple-icons/img/favicon.ico">
-	<link rel="stylesheet" href="http://www.bootcss.com/p/simple-icons/css/screen.css">
+	<style>
+	  canvas {border:1px solid black;}
+	</style>
+	<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
 	<script>
       var wc = 10;
 	  var hc = 8;
 	  var picCount = 10;
+	  var items;
 	  var picSrc = [
-	      
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+
 	  ];
 	  window.onload = init;
 
 	  function init(){
+		  items = new Array();
 		  //alert("Hello World");
 		  var planet = document.getElementById("planet");
-		  planet.innerHTML = "nice";
+		  //planet.innerHTML = "nice";
 		  //$("#planet").html("nice");
 		  //var li = document.createElement("li");
 		  //planet.appendChild(li);
+	  }
+
+	  function start(){
+	     console.log("start!~");
+         console.log(Math.random());
+		 //随机出wc*hc/2个在picCount范围内的数
+         var nc = wc*hc;
+		 var h_nc = nc/2;
+		 console.log(items);
+		 //抽取随机资源库资源
+		 for(var i=0; i<nc; ++i)
+		 {
+			 if(i<h_nc)
+			 {
+				 items[i] = parseInt(Math.random()*picCount);
+			 }
+			 else
+			 {
+				 items[i] = items[i-h_nc];
+			 }
+		 }
+		 console.log(items);
+		 //资源打乱
+		 for(var i=0; i<nc; ++i)
+		 {
+			 var r = parseInt(Math.random()*(nc-i))+i;
+			 if(r != i)
+			 {
+				 var temp = items[i];
+				 items[i] = items[r];
+				 items[r] = temp;
+			 }
+		 }
+		 console.log(items);
+		 //生成资源链接
+
+         //渲染UI
+		 var html_str = "<table>"
+         for(var i=0;i<hc;++i)
+		 {
+			 html_str += "<tr>"
+			 for(var j=0;j<wc;++j)
+			 {
+                 html_str += "<td><img src='"+picSrc[items[i*wc+j]]+"' width='32'/></td>"
+			 }
+			 html_str += "</tr>"
+		 }
+		 html_str += "</table>";
+         $("#planet").html(html_str);
+
 	  }
 
 	  function match(){
@@ -33,14 +97,17 @@
   </head>
   <body>
     <h1>This is a Hello World start!~</h1>
-    <div id="planet">
-	  
+	<form id="form">	  
+      <input type="button" value="Start!" onclick="start()"/>
+    </form>
+	<div id="planet">
+	
 	</div>
-	<section id="icon-preview">
-	  <div class="container">
-	    <i class="pinboard" title="Pinboard"></i>
-        <i class="facebook"></i>
-	  </div>
-	</section>
+	<!--
+	<canvas width="600" height="200" id="myCanvas">
+	  <p>your browser is not supporded!~</p>
+	</canvas>
+	-->
+	<br/>
   </body>
 </html>
