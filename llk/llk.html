@@ -158,7 +158,8 @@
 		  var pay = Number(src.id)%hc;
 		  var pbx = Math.floor(Number(dst.id)/hc);
 		  var pby = Number(dst.id)%hc;
-		  return connected_recursive(pax,pay,pbx,pby,0,0);
+		  //return connected_recursive(pax,pay,pbx,pby,0,0);
+		  return path_bfs(pax,pay,pbx,pby);
 	  }
 	  //pax,pay:点A
 	  //pbx,pby:点B
@@ -227,6 +228,24 @@
 
 		  return false;
 
+	  }
+	  function path_bfs(pax,pay,pbx,pby){
+		  //辅助队列
+		  var queue = new Array();
+		  //最短路径存储
+		  var path = new Array();
+		  queue.push({x:pax,y:pay,dir:0,inf:0});
+		  
+		  while(queue.lengh > 0)
+		  {
+			  var node = queue.shift();
+			  if(node.x == pbx && node.y == pby)
+			  {
+				  return true;
+			  }
+			  
+		  }
+		  return false;
 	  }
 	  function hide_item(item){
 		  $(item).hide();
