@@ -9,43 +9,57 @@
 	</style>
 	<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
 	<script>
-      var wc = 10;
+	  var state = 0; //状态0 idle, 1 start
+      
+	  //地图信息结构存储 结点state--- 0:通路 1:有图片 2:图片冻结 10:障碍物
+	  var item_map;
+	  var path_map;//存储路径
+	  //地图大小(包括边缘.至少要都>2)
+	  var wc = 10;
 	  var hc = 8;
-	  var picCount = 10;
-	  var items;
-	  var picSrc = [
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
-		  "http://cdn-img.easyicon.net/png/5389/538906.png",
 
+	  //图片资源生成范围
+	  var picCount = 10;
+
+	  //图片资源生成后的存储
+	  var items;
+
+	  //被点击过的item记录
+	  var src_item;
+
+      //图片资源库
+	  var picSrc = [
+		  "http://cdn-img.easyicon.net/png/5389/538900.png",
+		  "http://cdn-img.easyicon.net/png/5389/538901.png",
+		  "http://cdn-img.easyicon.net/png/5389/538902.png",
+		  "http://cdn-img.easyicon.net/png/5389/538903.png",
+		  "http://cdn-img.easyicon.net/png/5389/538904.png",
+		  "http://cdn-img.easyicon.net/png/5389/538905.png",
+		  "http://cdn-img.easyicon.net/png/5389/538906.png",
+		  "http://cdn-img.easyicon.net/png/5389/538907.png",
+		  "http://cdn-img.easyicon.net/png/5389/538908.png",
+		  "http://cdn-img.easyicon.net/png/5389/538909.png",
 	  ];
 	  window.onload = init;
 
 	  function init(){
 		  items = new Array();
-		  //alert("Hello World");
-		  var planet = document.getElementById("planet");
-		  //planet.innerHTML = "nice";
-		  //$("#planet").html("nice");
-		  //var li = document.createElement("li");
-		  //planet.appendChild(li);
+		  item_map = new Array();
+		  path_map = new Array();
+	  }
+
+	  function test(a){
+		  console.log(a);
 	  }
 
 	  function start(){
-	     console.log("start!~");
-         console.log(Math.random());
-		 //随机出wc*hc/2个在picCount范围内的数
-         var nc = wc*hc;
+		 if(state != 0) return;
+		 state = 1;
+	     
+		 //随机出picCount范围内的数
+         var nc = (wc-2)*(hc-2);
 		 var h_nc = nc/2;
-		 console.log(items);
+		 
 		 //抽取随机资源库资源
 		 for(var i=0; i<nc; ++i)
 		 {
@@ -58,7 +72,7 @@
 				 items[i] = items[i-h_nc];
 			 }
 		 }
-		 console.log(items);
+		 
 		 //资源打乱
 		 for(var i=0; i<nc; ++i)
 		 {
@@ -71,16 +85,43 @@
 			 }
 		 }
 		 console.log(items);
+		 
+		 //生成资源map--现在只有矩形,可以实现不同关卡
+		 var _i=0;
+		 for(var i=0;i<hc;++i)
+		 {
+			 for(var j=0;j<wc;++j)
+			 {
+				 //生成边缘
+				 if(i==0 || i==hc-1 || j==0 || j==wc-1)
+				 {
+					 item_map.push({"index":-1,"state":0});
+				 }
+				 else
+				 {
+					 //生成图片区域
+					 item_map.push({"index":_i,"state":1});
+					 ++_i;
+				 }
+			 }
+		 }
+
 		 //生成资源链接
 
          //渲染UI
 		 var html_str = "<table>"
-         for(var i=0;i<hc;++i)
+         for(var i=0;i<hc-2;++i)
 		 {
 			 html_str += "<tr>"
-			 for(var j=0;j<wc;++j)
+			 for(var j=0;j<wc-2;++j)
 			 {
-                 html_str += "<td><img src='"+picSrc[items[i*wc+j]]+"' width='32'/></td>"
+				 var _index = (i+1)*wc+j+1;
+				 var _picSrc = "";
+				 if( item_map[_index]["state"] == 1)
+				 {
+					 _picSrc = picSrc[items[item_map[_index]["index"]]];
+				 }
+                 html_str += "<td><button id='"+_index+"' onclick='click_signal(this)'><img src='"+_picSrc+"' width='32'/></button></td>"
 			 }
 			 html_str += "</tr>"
 		 }
@@ -88,9 +129,108 @@
          $("#planet").html(html_str);
 
 	  }
+      
+	  function click_signal(item){
+          console.log($(item));
+		  if(!src_item) src_item = item;
+		  else
+		  {
+			  if(src_item != item && match(src_item,item))
+			  {
+				  //$(src_item).hide();
+				  //$(item).hide();
+				  hide_item(src_item);
+				  hide_item(item);
+				  src_item = null;
+				  console.log(path_map);
+				  path_map.splice(0,path_map.length);
+			  }
+			  else
+			  {
+				  src_item = item;
+			  }
+		  }
+	  }
+	  function match(src,dst){
+	      if(items[item_map[src.id]["index"]] != items[item_map[dst.id]["index"]]) return false;
+		  
+		  var pax = Math.floor(Number(src.id)/hc);
+		  var pay = Number(src.id)%hc;
+		  var pbx = Math.floor(Number(dst.id)/hc);
+		  var pby = Number(dst.id)%hc;
+		  return connected_recursive(pax,pay,pbx,pby,0,0);
+	  }
+	  //pax,pay:点A
+	  //pbx,pby:点B
+	  //当前方向,0无方向,1向左走,2是向右走,3是向上走,4是向下走
+	  //当前拐点数,默认为0
+	  function connected_recursive(pax,pay,pbx,pby,direction,inflexion){
+		  if(direction == undefined) direction = 0;
+		  if(inflexion == undefined) inflexion = 0;
+		  if (inflexion > 2)
+		  {
+			  return false;
+		  }
+		  if(pax == pbx && pay == pby)
+		  {
+			  return true;
+		  }
+		  
+		  //继续向左走
+		  if(direction != 2 && pax-1>=0 && (item_map[(pax-1)*hc+pay]["state"]==0 || (pax-1==pbx&&pay==pby)))
+		  {
+			  var _inf = inflexion;
+			  if(direction == 3 || direction == 4) _inf += 1;
+			  if(connected_recursive(pax-1,pay,pbx,pby,1,_inf))
+			  {
+				  path_map.push([pax-1,pay]);
+				  console.log("left");
+			      return true;
+			  }
+		  }
+		  //继续向右走
+		  if(direction != 1 && pax+1<wc && (item_map[(pax+1)*hc+pay]["state"]==0 || (pax+1==pbx&&pay==pby)))
+		  {
+			  var _inf = inflexion;
+			  if(direction == 3 || direction == 4) _inf += 1;
+			  if(connected_recursive(pax+1,pay,pbx,pby,2,_inf))
+			  {
+				  path_map.push([pax+1,pay]);
+				  console.log("right");
+			      return true;
+			  }
+		  }
+		  //继续向上走
+		  if(direction != 4 && pay-1>=0 && (item_map[pax*hc+pay-1]["state"]==0 || (pax==pbx&&pay-1==pby)))
+		  {
+			  var _inf = inflexion;
+			  if(direction == 1 || direction == 2) _inf += 1;
+			  if(connected_recursive(pax,pay-1,pbx,pby,3,_inf))
+			  {
+				  path_map.push([pax,pay-1]);
+				  console.log("up");
+			      return true;
+			  }
+		  }
+		  //继续向下走
+		  if(direction != 3 && pay+1<hc && (item_map[pax*hc+pay+1]["state"]==0 || (pax==pbx&&pay+1==pby)))
+		  {
+			  var _inf = inflexion;
+			  if(direction == 1 || direction == 2) _inf += 1;
+			  if(connected_recursive(pax,pay+1,pbx,pby,4,_inf))
+			  {
+				  path_map.push([pax,pay+1]);
+				  console.log("down");
+			      return true;
+			  }
+		  }
 
-	  function match(){
-	      
+		  return false;
+
+	  }
+	  function hide_item(item){
+		  $(item).hide();
+		  item_map[item.id]["state"] = 1;
 	  }
 
 	</script>
