@@ -230,20 +230,56 @@
 
 	  }
 	  function path_bfs(pax,pay,pbx,pby){
+		  console.log("path_bfs");
 		  //辅助队列
 		  var queue = new Array();
 		  //最短路径存储
 		  var path = new Array();
 		  queue.push({x:pax,y:pay,dir:0,inf:0});
-		  
+		  var _i=0;
 		  while(queue.lengh > 0)
 		  {
 			  var node = queue.shift();
+			  if(node.inf > 2) break;
 			  if(node.x == pbx && node.y == pby)
 			  {
 				  return true;
 			  }
+			  console.log("==========="+String(_i)+"================");
+			  //左
+			  if(node.dir != 2 && node.x-1>=0 && (item_map[(node.x-1)*hc+node.y]["state"]==0 || (node.x-1==pbx&&node.y==pby)))
+			  {
+				  console.log("left");
+				  var _inf = node.inf;
+				  if(node.dir == 3 || node.dir == 4) _inf += 1;
+				  queue.push({x:node.x-1,y:node.y,dir:1,inf:_inf});
+			  }
 			  
+			  //右
+			  if(node.dir != 1 && node.x+1<wc && (item_map[(node.x+1)*hc+node.y]["state"]==0 || (node.x+1==pbx&&node.y==pby)))
+			  {
+				  console.log("right");
+				  var _inf = node.inf;
+				  if(node.dir == 3 || node.dir == 4) _inf += 1;
+				  queue.push({x:node.x+1,y:node.y,dir:2,inf:_inf});
+			  }
+			  //上
+			  if(node.dir != 4 && node.y-1>=0 && (item_map[node.x*hc+node.y-1]["state"]==0 || (node.x==pbx&&node.y-1==pby)))
+			  {
+				  console.log("up");
+				  var _inf = node.inf;
+				  if(node.dir == 1 || node.dir == 2) _inf += 1;
+				  queue.push({x:node.x,y:node.y-1,dir:3,inf:_inf});
+			  }
+			  //下
+			  if(node.dir != 3 && node.y+1<hc && (item_map[node.x*hc+node.y+1]["state"]==0 || (node.x==pbx&&node.y+1==pby)))
+			  {
+				  console.log("down");
+				  var _inf = node.inf;
+				  if(node.dir == 1 || node.dir == 2) _inf += 1;
+				  queue.push({x:node.x,y:node.y+1,dir:4,inf:_inf});
+			  }
+			  ++_i;
 		  }
 		  return false;
 	  }
