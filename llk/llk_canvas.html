@@ -13,7 +13,6 @@
       
 	  //地图信息结构存储 结点state--- 0:通路 1:有图片 2:图片冻结 10:障碍物
 	  var item_map;
-	  var path_map;//存储路径
 	  //地图大小(包括边缘.至少要都>2)
 	  var wc = 10;
 	  var hc = 8;
@@ -25,7 +24,7 @@
 	  var items;
 
 	  //被点击过的item记录
-	  var src_item;
+	  var src_index = -1;
 
       //图片资源库
 	  var picSrc = [
@@ -40,12 +39,26 @@
 		  "http://cdn-img.easyicon.net/png/5389/538908.png",
 		  "http://cdn-img.easyicon.net/png/5389/538909.png",
 	  ];
+
+	  //以下为canvas使用变量
+	  //绘图上下文
+	  var context;
+	  //绘图大小
+	  var size = 50;
+
 	  window.onload = init;
 
 	  function init(){
 		  items = new Array();
 		  item_map = new Array();
 		  path_map = new Array();
+
+		  var canvas = document.getElementById("myCanvas");
+		  canvas.width = size * wc;
+		  canvas.height = size * hc;
+		  canvas.addEventListener('click',click_canvas);
+		  context = canvas.getContext("2d");
+		  context.fillStyle="#FFFFFF";
 	  }
 
 	  function test(a){
@@ -54,7 +67,6 @@
 
 	  function start(){
 		 if(state != 0) return;
-		 state = 1;
 	     
 		 //随机出picCount范围内的数
          var nc = (wc-2)*(hc-2);
@@ -109,55 +121,42 @@
 		 //生成资源链接
 
          //渲染UI
-		 var html_str = "<table>"
-         for(var i=0;i<hc-2;++i)
+		 for(var i=0;i<wc*hc;++i)
 		 {
-			 html_str += "<tr>"
-			 for(var j=0;j<wc-2;++j)
-			 {
-				 var _index = (i+1)*wc+j+1;
-				 var _picSrc = "";
-				 if( item_map[_index]["state"] == 1)
-				 {
-					 _picSrc = picSrc[items[item_map[_index]["index"]]];
-				 }
-                 html_str += "<td><button id='"+_index+"' onclick='click_signal(this)'><img src='"+_picSrc+"' width='32'/></button></td>"
-			 }
-			 html_str += "</tr>"
+			 draw_item(i);
 		 }
-		 html_str += "</table>";
-         $("#planet").html(html_str);
+
+		 state = 1;
 
 	  }
       
-	  function click_signal(item){
-          console.log(item.id);
-		  if(!src_item) src_item = item;
+	  function click_signal(index){
+		  console.log("click:"+String(index));
+		  if(src_index == -1) src_index = index;
 		  else
 		  {
-			  if(src_item != item && match(src_item,item))
+			  if(src_index != index && match(src_index,index))
 			  {
 				  //$(src_item).hide();
 				  //$(item).hide();
-				  hide_item(src_item);
-				  hide_item(item);
-				  src_item = null;
-				  console.log(path_map);
-				  path_map.splice(0,path_map.length);
+				  hide_item(src_index);
+				  hide_item(index);
+				  src_index = -1;
+				  
 			  }
 			  else
 			  {
-				  src_item = item;
+				  src_index = index;
 			  }
 		  }
 	  }
-	  function match(src,dst){
-	      if(items[item_map[src.id]["index"]] != items[item_map[dst.id]["index"]]) return false;
+	  function match(src_i,dst_i){
+	      if(items[item_map[src_i]["index"]] != items[item_map[dst_i]["index"]]) return false;
 		  
-		  var pax = Number(src.id)%wc;
-		  var pay = Math.floor(Number(src.id)/wc);
-		  var pbx = Number(dst.id)%wc;
-		  var pby = Math.floor(Number(dst.id)/wc);
+		  var pax = Number(src_i)%wc;
+		  var pay = Math.floor(Number(src_i)/wc);
+		  var pbx = Number(dst_i)%wc;
+		  var pby = Math.floor(Number(dst_i)/wc);
 		  //return connected_recursive(pax,pay,pbx,pby,0,0);
 		  return path_bfs(pax,pay,pbx,pby);
 	  }
@@ -218,26 +217,51 @@
 		  }
 		  return false;
 	  }
-	  function hide_item(item){
-		  $(item).hide();
-		  item_map[item.id]["state"] = 1;
+	  function hide_item(index){
+		  item_map[index]["state"] = 0;
+		  draw_item(index);
+	  }
+
+	  //绘图封闭函数
+	  //根据item_map信息,绘制图片
+	  function draw_item(index){
+		  if(index < 0 || index >= item_map.length) return;
+
+		  var _state = item_map[index]["state"];
+		  if(_state == 1)
+		  {
+			  var img = new Image();
+			  img.src = picSrc[items[item_map[index]["index"]]];
+			  var _x = Number(index)%wc;
+			  var _y = Math.floor(Number(index)/wc);
+			  context.drawImage(img,_x*size,_y*size,size,size);
+		  }
+		  else if(_state == 0)
+		  {
+			  var _x = Number(index)%wc;
+			  var _y = Math.floor(Number(index)/wc);
+			  context.fillRect(_x*size,_y*size,size,size);
+		  }
+	  }
+
+	  function click_canvas(e){
+		  console.log(e);
+		  var _x = Math.floor(e.offsetX/size);
+		  var _y = Math.floor(e.offsetY/size);
+		  console.log("_x:"+String(_x)+"---_y:"+String(_y));
+          click_signal(_y*wc+_x);
 	  }
 
 	</script>
   </head>
   <body>
     <h1>This is a Hello World start!~</h1>
-	<form id="form">	  
-      <input type="button" value="Start!" onclick="start()"/>
-    </form>
-	<div id="planet">
+    <input type="button" value="Start!" onclick="start()"/>
 	
-	</div>
-	<!--
-	<canvas width="600" height="200" id="myCanvas">
+	<canvas width="500" height="400" id="myCanvas">
 	  <p>your browser is not supporded!~</p>
 	</canvas>
-	-->
+
 	<br/>
   </body>
 </html>
