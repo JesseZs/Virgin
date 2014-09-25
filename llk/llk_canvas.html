@@ -13,6 +13,7 @@
       
 	  //地图信息结构存储 结点state--- 0:通路 1:有图片 2:图片冻结 10:障碍物
 	  var item_map;
+	  var path_map;
 	  //地图大小(包括边缘.至少要都>2)
 	  var wc = 10;
 	  var hc = 8;
@@ -24,7 +25,7 @@
 	  var items;
 
 	  //被点击过的item记录
-	  var src_index = -1;
+	  var src_index;
 
       //图片资源库
 	  var picSrc = [
@@ -61,10 +62,6 @@
 		  context.fillStyle="#FFFFFF";
 	  }
 
-	  function test(a){
-		  console.log(a);
-	  }
-
 	  function start(){
 		 if(state != 0) return;
 	     
@@ -96,7 +93,7 @@
 				 items[r] = temp;
 			 }
 		 }
-		 console.log(items);
+		 //console.log(items);
 		 
 		 //生成资源map--现在只有矩形,可以实现不同关卡
 		 var _i=0;
@@ -132,7 +129,7 @@
       
 	  function click_signal(index){
 		  console.log("click:"+String(index));
-		  if(src_index == -1) src_index = index;
+		  if(!src_index) src_index = index;
 		  else
 		  {
 			  if(src_index != index && match(src_index,index))
@@ -141,7 +138,7 @@
 				  //$(item).hide();
 				  hide_item(src_index);
 				  hide_item(index);
-				  src_index = -1;
+				  src_index = null;
 				  
 			  }
 			  else
@@ -172,11 +169,17 @@
 		  while(queue.length > 0)
 		  {
 			  var node = queue.shift();
-			  if(node.inf > 2) break;
-			  console.log("========"+String(_i)+"======"+String(node.x)+":"+String(node.y)+"========");
+			  if(node.inf > 2)
+			  {
+				  console.log("===========continue===========");
+				  console.log(node.path.toString());
+				  continue;
+			  }
+			  //console.log("========"+String(_i)+"======"+String(node.x)+":"+String(node.y)+"========");
 			  if(node.x == pbx && node.y == pby)
 			  {
 				  //路径
+				  console.log("====find path:====inf:"+String(node.inf));
 				  console.log(String(node.path));
 				  return true;
 			  }
@@ -217,6 +220,10 @@
 		  }
 		  return false;
 	  }
+
+	  function check_state(){
+	  }
+
 	  function hide_item(index){
 		  item_map[index]["state"] = 0;
 		  draw_item(index);
@@ -243,13 +250,27 @@
 			  context.fillRect(_x*size,_y*size,size,size);
 		  }
 	  }
+	  function draw_active(){
+		  /*if(src_index)
+		  {
+			  var _x = Number(src_index)%wc;
+			  var _y = Math.floor(Number(src_index)/wc);
+			  context.rect(_x*size,_y*size,size,size);
+		  }*/
+	  }
+	  function draw_path(path){
+		  
+	  }
 
 	  function click_canvas(e){
-		  console.log(e);
+		  
 		  var _x = Math.floor(e.offsetX/size);
 		  var _y = Math.floor(e.offsetY/size);
-		  console.log("_x:"+String(_x)+"---_y:"+String(_y));
-          click_signal(_y*wc+_x);
+		  //console.log("_x:"+String(_x)+"---_y:"+String(_y));
+		  if(_x>0 && _x<wc-1 && _y>0 &&_y<hc-1)
+		  {
+			  click_signal(_y*wc+_x);
+		  }
 	  }
 
 	</script>
@@ -257,7 +278,7 @@
   <body>
     <h1>This is a Hello World start!~</h1>
     <input type="button" value="Start!" onclick="start()"/>
-	
+	<hr/>
 	<canvas width="500" height="400" id="myCanvas">
 	  <p>your browser is not supporded!~</p>
 	</canvas>
